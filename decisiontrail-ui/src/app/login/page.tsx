@@ -18,7 +18,6 @@ export default function LoginPage() {
         try {
             const res = await fetch('accounts/login', {
                 method: 'POST',
-                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
@@ -29,7 +28,6 @@ export default function LoginPage() {
             if (res.ok) {
                 const data = await res.json();
                 setAlert({ show: true, message: 'Login successful! Redirecting...', type: 'success' });
-                sessionStorage.setItem('authToken', data.token);
                 setTimeout(() => router.push('/dashboard'), 1500);
             } else {
                 setAlert({ show: true, message: 'Login failed. Please try again.', type: 'error' });

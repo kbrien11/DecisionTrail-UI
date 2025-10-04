@@ -4,7 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="602d3870-d8ac-4007-aff9-57984a79d5e1" name="Changes" comment="" />
+    <list default="true" id="602d3870-d8ac-4007-aff9-57984a79d5e1" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/decisiontrail-ui/src/app/dashboard/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/decisiontrail-ui/src/app/dashboard/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/decisiontrail-ui/src/app/login/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/decisiontrail-ui/src/app/login/page.tsx" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -69,7 +73,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1759178474124</updated>
-      <workItem from="1759178475246" duration="8311000" />
+      <workItem from="1759178475246" duration="13748000" />
     </task>
     <servers />
   </component>

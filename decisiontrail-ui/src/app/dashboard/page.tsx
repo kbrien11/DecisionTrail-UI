@@ -5,13 +5,13 @@ import Link from 'next/link';
 
 
 
-const teams = ['All', 'Product', 'Ops', 'Compliance'];
 
 export default function DashboardPage() {
     const [search, setSearch] = useState('');
     const [filterOwner, setFilterOwner] = useState('');
     const [filterConfidence, setFilterConfidence] = useState('');
     const [decisions, setDecisions] = useState([]);
+    const [teams, setTeams] = useState([]);
     const [activeTeam, setActiveTeam] = useState('All');
     const [page, setPage] = useState(1);
     const [error, setError] = useState(false);
@@ -20,9 +20,12 @@ export default function DashboardPage() {
 
     const params = new URLSearchParams();
 
+
     params.append('company_domain', 'decisiontrail');
     params.append('page', page.toString());
     params.append('page_size', '2');
+
+
 
     if (search) params.append('search', search);
     if (filterOwner) params.append('owner', filterOwner);
@@ -33,22 +36,27 @@ export default function DashboardPage() {
     useEffect(() => {
         const fetchDecisions = async () => {
             try {
-                const res = await fetch('http://127.0.0.1:8000/slack/api/decisions?company_domain=decisiontrail&page=1&page_size=4', {
+                const res = await fetch('http://localhost:8000/slack/api/decisions?company_domain=decisiontrail&page=1&page_size=4', {
                     method: 'GET',
-                    credentials: 'include', // ✅ Required for cookies/session
-
+                    credentials: 'include', // ✅ sends cookies
                     headers: {
                         'Accept': 'application/json',
-
-            },
+                    },
                 });
 
-                if (!res.ok) throw new Error('Failed to fetch decisions');
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    console.error('Fetch failed:', res.status, errorText);
+                    throw new Error('Failed to fetch decisions');
+                }
+
                 const data = await res.json();
+                console.log('Fetched decisions:', data);
                 setDecisions(data.decisions);
+                setTeams(data.teams);
             } catch (err) {
-                // @ts-ignore
-                setError('Could not load audit trail.');
+                console.error('Fetch error:', err);
+                setError(true);
             } finally {
                 setLoading(false);
             }
@@ -103,14 +111,16 @@ export default function DashboardPage() {
 
                 {/* Team Tabs */}
                 <div className="flex gap-4 mb-6">
-                    {teams.map((team) => (
+                    {teams.map((team, index) => (
                         <button
                             key={team}
                             onClick={() => setActiveTeam(team)}
                             className={`px-4 py-2 rounded-full text-sm font-medium transition ${
                                 activeTeam === team
                                     ? 'bg-zinc-800 text-white'
-                                    : 'bg-zinc-200 text-zinc-700 hover:bg-zinc-300'
+                                    : index % 2 === 0
+                                        ? 'bg-blue-200 text-black font-bold hover:bg-blue-300'
+                                        : 'bg-zinc-200 text-black font-bold hover:bg-zinc-300'
                             }`}
                         >
                             {team}
