@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 
+
 export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [email, setIdentifier] = useState('');
@@ -28,7 +29,7 @@ export default function LoginPage() {
             if (res.ok) {
                 const data = await res.json();
                 setAlert({ show: true, message: 'Login successful! Redirecting...', type: 'success' });
-                setTimeout(() => router.push('/dashboard'), 1500);
+                setTimeout(() => router.push('/analytics'), 1500);
             } else {
                 setAlert({ show: true, message: 'Login failed. Please try again.', type: 'error' });
                 setTimeout(() => setAlert({ show: false, message: '', type: '' }), 3000);
