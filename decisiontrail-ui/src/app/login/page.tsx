@@ -10,6 +10,8 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [email, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
+    const [company, setCompany] = useState('');
+
     const [alert, setAlert] = useState({ show: false, message: '', type: '' });
     const router = useRouter();
 
@@ -19,17 +21,18 @@ export default function LoginPage() {
         try {
             const res = await fetch('accounts/login', {
                 method: 'POST',
+                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
                 },
                 body: JSON.stringify({ email, password }),
             });
-
             if (res.ok) {
                 const data = await res.json();
+                setCompany(data.company);
                 setAlert({ show: true, message: 'Login successful! Redirecting...', type: 'success' });
-                setTimeout(() => router.push('/analytics'), 1500);
+                setTimeout(() => router.push(`/analytics?company=${encodeURIComponent(data.company)}&projects=${encodeURIComponent(data.projects)}`), 1500);
             } else {
                 setAlert({ show: true, message: 'Login failed. Please try again.', type: 'error' });
                 setTimeout(() => setAlert({ show: false, message: '', type: '' }), 3000);
@@ -45,20 +48,22 @@ export default function LoginPage() {
     return (
         <div className="min-h-screen flex flex-col sm:flex-row">
             {/* Left Panel */}
-            <div className="sm:w-1/2 w-full bg-gradient-to-br from-black via-gray-400 to-white text-white flex flex-col justify-center items-center px-6 py-12">
+            <div className="sm:w-1/2 w-full bg-gradient-to-br from-blue-600 via-indigo-500 to-purple-500 text-white flex flex-col justify-center items-center px-6 py-12 rounded-r-xl shadow-lg">
                 {/* Welcome Message */}
                 <h1 className="text-4xl font-bold mb-4 text-center drop-shadow-lg">
                     Welcome to Audit Trail
                 </h1>
 
                 {/* Company Logo */}
-                <div className="relative w-48 h-20 sm:w-64 sm:h-24 mb-6 bg-white/10 rounded-xl backdrop-blur-sm p-2">
-                    <Image
-                        src="/company_logo.png"
-                        alt="DecisionAudit Logo"
-                        fill
-                        className="object-contain"
-                    />
+                <div className="relative aspect-[3/1] w-72 sm:w-80 mb-6 bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 rounded-xl p-1 shadow-md">
+                    <div className="relative w-full h-full bg-white rounded-lg flex items-center justify-center">
+                        <Image
+                            src="/company_logo.png"
+                            alt="DecisionAudit Logo"
+                            fill
+                            className="object-contain p-2 sm:p-4"
+                        />
+                    </div>
                 </div>
 
                 {/* Tagline */}
@@ -121,16 +126,16 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full py-2 px-4 text-white bg-zinc-700 rounded-md ring-1 ring-transparent hover:ring-zinc-800 transition disabled:opacity-50"
-                       >
+                            className="w-full py-2 px-4 text-white font-semibold rounded-md bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 hover:brightness-105 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
                             {loading ? (
                                 <span className="flex items-center justify-center">
-                  <svg className="animate-spin mr-2 h-5 w-5 text-white" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  Signing in...
-                </span>
+      <svg className="animate-spin mr-2 h-5 w-5 text-white" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+      </svg>
+      Signing in...
+    </span>
                             ) : (
                                 'Login'
                             )}

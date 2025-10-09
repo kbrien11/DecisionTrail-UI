@@ -2,6 +2,7 @@
 
 import {JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal, useEffect, useState} from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
 
 
@@ -20,10 +21,19 @@ export default function DashboardPage() {
 
     const params = new URLSearchParams();
 
+    const searchParams = useSearchParams();
+    const team = searchParams.get('team');
+    const company = searchParams.get('company');
+    const project = searchParams.get('project');
+
 
     params.append('company_domain', 'decisiontrail');
     params.append('page', page.toString());
     params.append('page_size', '2');
+    if (team != null) {
+        params.append('team', team);
+    }
+
 
 
 
@@ -36,7 +46,7 @@ export default function DashboardPage() {
     useEffect(() => {
         const fetchDecisions = async () => {
             try {
-                const res = await fetch('http://localhost:8000/slack/api/decisions?company_domain=decisiontrail&page=1&page_size=4', {
+                const res = await fetch(`http://localhost:8000/slack/api/decisions?company_domain=${company}&page=1&page_size=4&project=${project}`, {
                     method: 'GET',
                     credentials: 'include', // ✅ sends cookies
                     headers: {
@@ -95,37 +105,25 @@ export default function DashboardPage() {
     return (
         <div className="min-h-screen flex bg-gray-100">
             {/* Sidebar */}
-            <aside className="w-64 bg-zinc-900 text-white flex flex-col p-6 space-y-6">
-                <div className="text-2xl font-bold">DecisionAudit</div>
+            <aside className="w-64 bg-gradient-to-b from-blue-600 via-indigo-500 to-purple-500 text-white flex flex-col p-6 space-y-6 rounded-r-xl shadow-lg">
+                <div className="text-2xl font-bold tracking-wide">DecisionAudit</div>
                 <nav className="flex flex-col space-y-4 text-sm">
-                    <Link href="/dashboard" className="hover:text-zinc-300">Dashboard</Link>
-                    <Link href="/teams" className="hover:text-zinc-300">Teams</Link>
-                    <Link href="/settings" className="hover:text-zinc-300">Settings</Link>
+                    <Link href= {`/analytics?company=${encodeURIComponent(company)}&projects=${encodeURIComponent(project)}`} className="hover:text-white/80 transition-colors">Analytics</Link>
+                    <Link href="/teams" className="hover:text-white/80 transition-colors">Teams</Link>
+                    <Link href="/settings" className="hover:text-white/80 transition-colors">Settings</Link>
                 </nav>
             </aside>
 
             {/* Main Content */}
             <main className="flex-1 px-8 py-10">
                 {/* Company Name */}
-                <h1 className="text-2xl font-bold text-zinc-800 mb-6">Acme Corp Audit Trail</h1>
-
-                {/* Team Tabs */}
+                <h1 className="text-2xl font-bold text-zinc-800 mb-6">
+                    {company.charAt(0).toUpperCase() + company.slice(1).toLowerCase()}
+                </h1>
                 <div className="flex gap-4 mb-6">
-                    {teams.map((team, index) => (
-                        <button
-                            key={team}
-                            onClick={() => setActiveTeam(team)}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-                                activeTeam === team
-                                    ? 'bg-zinc-800 text-white'
-                                    : index % 2 === 0
-                                        ? 'bg-blue-200 text-black font-bold hover:bg-blue-300'
-                                        : 'bg-zinc-200 text-black font-bold hover:bg-zinc-300'
-                            }`}
-                        >
-                            {team}
-                        </button>
-                    ))}
+  <span className="inline-block px-4 py-2 rounded-full text-sm font-semibold text-white bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 shadow-sm">
+    {team}
+  </span>
                 </div>
 
                 {/* Search + Filters */}
@@ -167,44 +165,110 @@ export default function DashboardPage() {
                     {paginatedDecisions.map((d: Decision) => (
                         <div
                             key={d.id}
-                            className="bg-white rounded-xl shadow-lg hover:shadow-xl border-l-4 border-zinc-700 p-6 transition-transform hover:scale-[1.01]"
+                            className="relative bg-white rounded-xl shadow-md hover:shadow-lg transition-transform hover:scale-[1.01] p-6"
                         >
-                            <h3 className="text-lg font-bold text-zinc-800 mb-2">{d.summary}</h3>
-                            <p className="text-sm text-zinc-500 mb-1">{d.created_at}</p>
+                            {/* Gradient left border */}
+                            <div className="absolute top-0 left-0 h-full w-1 bg-gradient-to-b from-blue-600 via-indigo-500 to-purple-500 rounded-l" />
 
-                            <div className="flex flex-wrap gap-2 mb-2">
-                                {d.tags
-                                    ?.split(',')
-                                    .map((tag: string, i: Key | null | undefined) => (
+                            {/* Title */}
+                            <h3 className="text-lg font-semibold text-zinc-800 mb-3 leading-tight tracking-tight">
+                                {d.summary}
+                            </h3>
+
+                            {/* Team pill */}
+                            <div className="mb-4">
+        <span className="inline-block px-3 py-1 text-xs font-semibold text-white bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 rounded-full shadow-sm">
+          {d.team}
+        </span>
+                            </div>
+
+                            {/* Date */}
+                            <p className="text-xs text-zinc-500 mb-4">
+                                {new Date(d.created_at).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                })}
+                            </p>
+
+                            {/* Tags */}
+                            {d.tags && (
+                                <div className="flex flex-wrap gap-2 mb-4">
+                                    {d.tags.split(',').map((tag: string, i: number) => (
                                         <span
                                             key={i}
                                             className="px-2 py-1 text-xs bg-zinc-100 text-zinc-700 rounded-full"
                                         >
-        {tag.trim()}
-      </span>
+              {tag.trim()}
+            </span>
                                     ))}
-                            </div>
+                                </div>
+                            )}
 
-                            <p className="text-sm text-zinc-700 mb-2">
-                                <span className="font-medium">Rationale:</span> {d.rationale}
+                            {/* Rationale */}
+                            <p className="text-sm text-zinc-700 mb-4 leading-relaxed">
+                                <span className="font-medium text-zinc-800">Rationale:</span> {d.rationale}
                             </p>
 
-                            <div className="grid grid-cols-2 gap-2 text-sm text-zinc-700 mb-2">
-                                <p><span className="font-medium">Confidence:</span> {d.confidence}</p>
-                                <p><span className="font-medium">Owner:</span> {d.owner}</p>
-                                <p><span className="font-medium">Team:</span> {d.team}</p>
+                            {/* Metadata */}
+                            <div className="grid grid-cols-2 gap-2 text-sm text-zinc-600 mb-4">
+                                <p><span className="font-medium text-zinc-800">Confidence:</span> {d.confidence}</p>
+                                <p><span className="font-medium text-zinc-800">Owner:</span> {d.owner}</p>
                             </div>
 
+                            {/* Jira Link */}
                             <a
                                 href={d.jiraUrl}
                                 target="_blank"
-                                className="inline-block mt-2 text-sm text-blue-600 hover:underline font-medium"
+                                className="inline-block text-sm font-medium text-blue-600 hover:text-indigo-600 transition-colors"
                             >
                                 🔗 View Jira Issue
                             </a>
                         </div>
                     ))}
                 </div>
+      {/*          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">*/}
+      {/*              {paginatedDecisions.map((d: Decision) => (*/}
+      {/*                  <div*/}
+      {/*                      key={d.id}*/}
+      {/*                      className="bg-white rounded-xl shadow-lg hover:shadow-xl border-l-4 border-zinc-700 p-6 transition-transform hover:scale-[1.01]"*/}
+      {/*                  >*/}
+      {/*                      <h3 className="text-lg font-bold text-zinc-800 mb-2">{d.summary}</h3>*/}
+      {/*                      <p className="text-sm text-zinc-500 mb-1">{d.created_at}</p>*/}
+
+      {/*                      <div className="flex flex-wrap gap-2 mb-2">*/}
+      {/*                          {d.tags*/}
+      {/*                              ?.split(',')*/}
+      {/*                              .map((tag: string, i: Key | null | undefined) => (*/}
+      {/*                                  <span*/}
+      {/*                                      key={i}*/}
+      {/*                                      className="px-2 py-1 text-xs bg-zinc-100 text-zinc-700 rounded-full"*/}
+      {/*                                  >*/}
+      {/*  {tag.trim()}*/}
+      {/*</span>*/}
+      {/*                              ))}*/}
+      {/*                      </div>*/}
+
+      {/*                      <p className="text-sm text-zinc-700 mb-2">*/}
+      {/*                          <span className="font-medium">Rationale:</span> {d.rationale}*/}
+      {/*                      </p>*/}
+
+      {/*                      <div className="grid grid-cols-2 gap-2 text-sm text-zinc-700 mb-2">*/}
+      {/*                          <p><span className="font-medium">Confidence:</span> {d.confidence}</p>*/}
+      {/*                          <p><span className="font-medium">Owner:</span> {d.owner}</p>*/}
+      {/*                          <p><span className="font-medium">Team:</span> {d.team}</p>*/}
+      {/*                      </div>*/}
+
+      {/*                      <a*/}
+      {/*                          href={d.jiraUrl}*/}
+      {/*                          target="_blank"*/}
+      {/*                          className="inline-block mt-2 text-sm text-blue-600 hover:underline font-medium"*/}
+      {/*                      >*/}
+      {/*                          🔗 View Jira Issue*/}
+      {/*                      </a>*/}
+      {/*                  </div>*/}
+      {/*              ))}*/}
+      {/*          </div>*/}
 
                 {/* Pagination */}
                 <div className="flex justify-center items-center mt-10 gap-4">

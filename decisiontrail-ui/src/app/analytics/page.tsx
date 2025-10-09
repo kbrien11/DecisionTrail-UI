@@ -9,60 +9,39 @@ import {
     Tooltip,
     Legend,
     ResponsiveContainer,
-    CartesianGrid,
+    CartesianGrid, PieChart, Pie, Cell,
 } from 'recharts';
-
-
-
-
-
-// const mockTeams = [
-//     {
-//         name: 'Finance',
-//         count: 73,
-//         tags: ['Budget', 'Expense', 'Forecast'],
-//     },
-//     {
-//         name: 'Operations',
-//         count: 52,
-//         tags: ['Capacity', 'Contract', 'Vendor'],
-//     },
-//     {
-//         name: 'Legal',
-//         count: 50,
-//         tags: ['Compliance', 'Policy', 'Vendor'],
-//     },
-//     {
-//         name: 'Product',
-//         count: 42,
-//         tags: ['Labeling', 'Launch', 'QA'],
-//     },
-//     {
-//         name: 'Sales',
-//         count: 30,
-//         tags: ['Pipeline', 'Contract', 'Vendor'],
-//     },
-// ];
-
+import Image from "next/image";
+import { useSearchParams } from 'next/navigation';
 
 
 
 const AuditAnalyticsDashboard = () => {
     const [chartData, setChartData] = useState([]);
     const [teamSummary, setTeamSummary] = useState([]);
+    const [company, setCompany] = useState("");
 
     const [loading, setLoading] = useState(true);
 
+    const searchParams = useSearchParams();
+    const companyLogin = searchParams.get('company');
+    const projects = searchParams.get('projects');
+    const projectList = projects?.split(',').map(p => p.trim()).filter(Boolean) || [];
+    const [selectedProject, setSelectedProject] = useState(projectList[0]);
+
+    const cleanedProject = selectedProject.replace(/\s+/g, '');
     useEffect(() => {
         const fetchChartData = async () => {
             try {
                 const [analyticsRes, summaryRes] = await Promise.all([
-                    fetch('http://localhost:8000/slack/api/analytics?company_domain=decisiontrail', {
+
+
+                fetch(`http://localhost:8000/slack/api/analytics?company_domain=${companyLogin}&project=${cleanedProject}`, {
                         method: 'GET',
                         credentials: 'include',
                         headers: { 'Accept': 'application/json' },
                     }),
-                    fetch('http://localhost:8000/slack/api/getTeams?company_domain=decisiontrail', {
+                    fetch(`http://localhost:8000/slack/api/getTeams?company_domain=${companyLogin}&project=${cleanedProject}`, {
                         method: 'GET',
                         credentials: 'include',
                         headers: { 'Accept': 'application/json' },
@@ -81,6 +60,7 @@ const AuditAnalyticsDashboard = () => {
                 }));
 
                 setChartData(formattedChart);
+                setCompany(analyticsData.company)
                 setTeamSummary(summaryData.data);
             } catch (err) {
                 console.error('Chart fetch error:', err);
@@ -90,39 +70,7 @@ const AuditAnalyticsDashboard = () => {
         };
 
         fetchChartData();
-    }, []);
-
-    // useEffect(() => {
-    //     const fetchChartData = async () => {
-    //         try {
-    //             const res = await fetch('http://localhost:8000/slack/api/analytics?company_domain=decisiontrail', {
-    //                 method: 'GET',
-    //                 credentials: 'include',
-    //                 headers: {
-    //                     'Accept': 'application/json',
-    //                 },
-    //             });
-    //
-    //             if (!res.ok) throw new Error('Failed to fetch chart data');
-    //             const data = await res.json();
-    //
-    //             // Transform backend format to Recharts format
-    //             const formatted = data.teams.map((team: any) => ({
-    //                 team: team.team,
-    //                 Closed: team.Closed,
-    //                 Open: team.Open
-    //             }));
-    //
-    //             setChartData(formatted);
-    //         } catch (err) {
-    //             console.error('Chart fetch error:', err);
-    //         } finally {
-    //             setLoading(false);
-    //         }
-    //     };
-    //
-    //     fetchChartData();
-    // }, []);
+    }, [selectedProject]);
 
     const tagColors = [
         "bg-blue-300",
@@ -134,91 +82,176 @@ const AuditAnalyticsDashboard = () => {
         "bg-teal-300"
     ];
 
+    const pieData = chartData.map(team => ({
+        team: team.team,
+        total: team.Closed + team.Open
+    }));
+
+
+
+
+
+
+
+
 
     // @ts-ignore
     return (
         <div className="min-h-screen bg-gray-50 px-6 py-8">
             {/* Header */}
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">Audit Analytics</h1>
-                <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 mb-8">
+                {/* Left: Logo + Project Selector */}
+                <div className="flex flex-col items-center sm:items-start">
+                    <div className="relative w-64 sm:w-72 h-24 mb-2 flex items-center justify-center">
+                        <Image
+                            src="/company_logo.png"
+                            alt="DecisionAudit Logo"
+                            fill
+                            className="object-contain"
+                        />
+                    </div>
+
+                    <select
+                        value={selectedProject}
+                        onChange={(e) => setSelectedProject(e.target.value)}
+                        className="w-64 px-4 py-2 rounded-md text-sm font-medium bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 text-white shadow focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                        {projectList.map((project) => (
+                            <option key={project} value={project}>
+                                {project}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                {/* Right: Filters */}
+                <div className="flex flex-wrap gap-4">
                     {['Date Range', 'Audit Type', 'Status', 'Confidence Level'].map((label) => (
-                        <select key={label} className="bg-blue-900 text-white px-3 py-2 rounded text-sm">
-                            <option>{label}</option>
-                        </select>
+                        <div key={label} className="w-48 rounded-md shadow-sm">
+                            <div className="h-1 w-full bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 rounded-t" />
+                            <select
+                                className="w-full bg-white text-gray-800 text-sm px-4 py-2 rounded-b-md focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500 transition"
+                            >
+                                <option disabled selected>{label}</option>
+                                <option>Option 1</option>
+                                <option>Option 2</option>
+                            </select>
+                        </div>
                     ))}
                 </div>
             </div>
 
-            {/* Bar Chart Placeholder */}
-            <div className="bg-white p-6 rounded shadow mb-8">
-                <h2 className="text-lg font-semibold text-gray-800 mb-4">Total Audits By Team</h2>
-                <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="team" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Bar dataKey="Closed" stackId="a" fill="#1e3a8a" />
-                        <Bar dataKey="Open" stackId="a" fill="#3b82f6" />
-                        <Bar dataKey="Review" stackId="a" fill="#93c5fd" />
-                    </BarChart>
-                </ResponsiveContainer>
+            <div className="bg-gradient-to-br from-white via-gray-50 to-gray-100 p-6 rounded-xl shadow-lg mb-8 border border-gray-200">
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold text-gray-800 tracking-tight flex items-center gap-3">
+                        📊 Total Audits by Team
+                        <span className="inline-block px-3 py-1 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 rounded-full shadow-sm">
+                        {company.charAt(0).toUpperCase() + company.slice(1).toLowerCase()}
+
+  </span>
+                    </h2>
+                    <span className="text-sm text-gray-500">Updated this week</span>
+                    <span> {selectedProject}</span>
+                </div>
+
+                <div className="bg-white rounded-lg shadow-sm p-4">
+                    <ResponsiveContainer width="100%" height={300}>
+                        <PieChart>
+                            <Tooltip
+                                contentStyle={{ backgroundColor: "#f9fafb", borderRadius: "8px", border: "1px solid #e5e7eb" }}
+                                labelStyle={{ fontWeight: "600", color: "#374151" }}
+                            />
+                            <Legend
+                                layout="horizontal"
+                                verticalAlign="bottom"
+                                align="center"
+                                wrapperStyle={{ fontSize: "0.875rem", marginTop: "12px" }}
+                            />
+                            <Pie
+                                data={pieData}
+                                dataKey="total"
+                                nameKey="team"
+                                cx="50%"
+                                cy="50%"
+                                outerRadius={110}
+                                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                            >
+                                <Cell fill="#1e3a8a" />
+                                <Cell fill="#3b82f6" />
+                                <Cell fill="#93c5fd" />
+                                {/* Add more <Cell /> if needed */}
+                            </Pie>
+                        </PieChart>
+                    </ResponsiveContainer>
+                </div>
+
+
+
             </div>
             {/*<div className="bg-white p-6 rounded shadow mb-8">*/}
             {/*    <h2 className="text-lg font-semibold text-gray-800 mb-4">Total Audits By Team</h2>*/}
-            {/*    <div className="grid grid-cols-5 gap-6 items-end h-48">*/}
-            {/*        {mockTeams.map((team, index) => {*/}
-            {/*            const closed = Math.floor(team.count * 0.6);*/}
-            {/*            const open = Math.floor(team.count * 0.25);*/}
-            {/*            const review = team.count - closed - open;*/}
-            {/*            return (*/}
-            {/*                <div key={team.name} className="flex flex-col items-center">*/}
-            {/*                    <div className="w-10 h-full flex flex-col justify-end">*/}
-            {/*                        <div className="bg-blue-900 w-full" style={{ height: `${closed}px` }} />*/}
-            {/*                        <div className="bg-blue-600 w-full" style={{ height: `${open}px` }} />*/}
-            {/*                        <div className="bg-blue-300 w-full" style={{ height: `${review}px` }} />*/}
-            {/*                    </div>*/}
-            {/*                    <span className="mt-2 text-sm text-gray-700">{team.name}</span>*/}
-            {/*                </div>*/}
-            {/*            );*/}
-            {/*        })}*/}
-            {/*    </div>*/}
-            {/*    <div className="flex justify-center gap-6 mt-4 text-sm text-gray-600">*/}
-            {/*        <div className="flex items-center gap-2"><div className="w-3 h-3 bg-blue-900" /> Closed</div>*/}
-            {/*        <div className="flex items-center gap-2"><div className="w-3 h-3 bg-blue-600" /> Open</div>*/}
-            {/*        <div className="flex items-center gap-2"><div className="w-3 h-3 bg-blue-300" /> In Review</div>*/}
-            {/*    </div>*/}
+            {/*    <ResponsiveContainer width="100%" height={300}>*/}
+            {/*        <PieChart>*/}
+            {/*            <Tooltip />*/}
+            {/*            <Legend />*/}
+            {/*            <Pie*/}
+            {/*                data={pieData}*/}
+            {/*                dataKey="total"*/}
+            {/*                nameKey="team"*/}
+            {/*                cx="50%"*/}
+            {/*                cy="50%"*/}
+            {/*                outerRadius={100}*/}
+            {/*                label*/}
+            {/*            >*/}
+            {/*                <Cell fill="#1e3a8a" />*/}
+            {/*                <Cell fill="#3b82f6" />*/}
+            {/*                <Cell fill="#93c5fd" />*/}
+            {/*                /!* Add more <Cell /> if you have more teams *!/*/}
+            {/*            </Pie>*/}
+            {/*        </PieChart>*/}
+            {/*    </ResponsiveContainer>*/}
             {/*</div>*/}
 
-            {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
                 {teamSummary.map((team) => (
-                    <div key={team.name} className="bg-white border rounded p-4 pb-12 shadow-sm relative">                        <h3 className="text-lg font-semibold text-gray-800">
-                            {team.name
-                                .split(" ")
-                                .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                                .join(" ")}
-                        </h3>
-                        <p className="text-sm text-gray-600 mb-4">
-                            {team.count} {team.count === 1 ? "Audit" : "Audits"} This Year
-                        </p>
-                        <ul className="text-sm text-gray-700 mb-2">
-                            {team.tags.map((tag: string, index: number) => (
-                                <li key={tag} className="flex items-center gap-2">
-                                    <span className={`w-2 h-2 rounded-full ${tagColors[index % tagColors.length]}`} />
-                                    {tag}
-                                </li>
-                            ))}
-                        </ul>
+                    <div key={team.name} className="bg-white rounded-xl shadow-md overflow-hidden relative group transition-transform hover:-translate-y-1 hover:shadow-lg">
 
-                        <div className="absolute bottom-4 right-4 p-2">
+                        {/* Header */}
+                        <div className="h-1 w-full bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 rounded-t" />
+                        <div className="px-4 pt-4">
+                            <h3 className="text-lg font-semibold text-gray-800 tracking-wide">
+                                {team.name
+                                    .split(" ")
+                                    .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                                    .join(" ")}
+                            </h3>
+                        </div>
+
+                        {/* Body */}
+                        <div className="p-4 pb-16">
+                            <p className="text-sm text-gray-600 mb-4">
+          <span className="inline-block bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">
+            {team.count} {team.count === 1 ? "Audit" : "Audits"} This Year
+          </span>
+                            </p>
+
+                            <ul className="flex flex-wrap gap-2 text-sm text-gray-700">
+                                {team.tags.map((tag: string, index: number) => (
+                                    <li key={tag} className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-full">
+                                        <span className={`w-2 h-2 rounded-full ${tagColors[index % tagColors.length]}`} />
+                                        <span className="text-xs">{tag}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        {/* CTA */}
+                        <div className="absolute bottom-4 right-4">
                             <a
-                                href={`/team/${team.name.toLowerCase()}`}
-                                className="text-blue-600 text-sm font-medium hover:underline"
+                                href={`/dashboard?team=${encodeURIComponent(team.name)}&company=${encodeURIComponent(company)}&project=${encodeURIComponent(cleanedProject)}`}
+                                className="text-blue-600 text-sm font-medium hover:text-blue-800 transition-colors"
                             >
-                                View Audits
+                                View Audits →
                             </a>
                         </div>
                     </div>
