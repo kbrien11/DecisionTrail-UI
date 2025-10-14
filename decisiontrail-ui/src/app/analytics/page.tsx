@@ -19,7 +19,7 @@ import Footer from "@/app/Footer";
 
 
 
-// @ts-ignore
+
 const AuditAnalyticsDashboard = () => {
     const [chartData, setChartData] = useState<TeamStats[]>([]);
     const [teamSummary, setTeamSummary] = useState<TeamSummary[]>([]);
@@ -63,7 +63,7 @@ const AuditAnalyticsDashboard = () => {
                 const analyticsData = await analyticsRes.json();
                 const summaryData = await summaryRes.json();
 
-                const formattedChart = analyticsData.teams.map((team: any) => ({
+                const formattedChart = analyticsData.teams.map((team: TeamStats) => ({
                     team: team.team,
                     Closed: team.Closed,
                     Open: team.Open
