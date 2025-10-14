@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import {Suspense, useEffect, useState} from 'react';
 import {
     BarChart,
     Bar,
@@ -121,6 +121,8 @@ const AuditAnalyticsDashboard = () => {
 
 
     return (
+        <Suspense fallback={<div>Loading analytics...</div>}>
+
         <div className="flex flex-col min-h-screen">
             <Navbar />
         <div className="flex-grow bg-gray-50 px-6 py-8">
@@ -245,6 +247,7 @@ const AuditAnalyticsDashboard = () => {
         </div>
             <Footer />
         </div>
+        </Suspense>
     );
 };
 

@@ -1,10 +1,9 @@
 'use client';
 
-import {JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal, useEffect, useState} from 'react';
+import {JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal, Suspense, useEffect, useState} from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import Navbar from "@/app/Navbar";
-import {Foldit} from "next/dist/compiled/@next/font/dist/google";
 import Footer from "@/app/Footer";
 
 
@@ -117,6 +116,8 @@ export default function DashboardPage() {
 
 
     return (
+        <Suspense fallback={<div>Loading analytics...</div>}>
+
         <div className="flex flex-col min-h-screen">
             <Navbar />
         <div className="flex flex-1 bg-gray-100">
@@ -303,5 +304,7 @@ export default function DashboardPage() {
         </div>
             <Footer />
         </div>
+        </Suspense>
+
     );
 }
