@@ -19,7 +19,7 @@ import Footer from "@/app/Footer";
 
 
 
-
+export const dynamic = 'force-dynamic'
 const AuditAnalyticsDashboard = () => {
     const [chartData, setChartData] = useState<TeamStats[]>([]);
     const [teamSummary, setTeamSummary] = useState<TeamSummary[]>([]);

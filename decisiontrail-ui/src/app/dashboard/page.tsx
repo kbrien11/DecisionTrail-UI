@@ -7,7 +7,7 @@ import Navbar from "@/app/Navbar";
 import Footer from "@/app/Footer";
 
 
-
+export const dynamic = 'force-dynamic'
 
 export default function DashboardPage() {
     const [search, setSearch] = useState('');
