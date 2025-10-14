@@ -115,7 +115,7 @@ export default function DashboardPage() {
 
 
 
-    // @ts-ignore
+
     return (
         <div className="flex flex-col min-h-screen">
             <Navbar />
@@ -125,7 +125,14 @@ export default function DashboardPage() {
             <aside className="w-64 bg-gradient-to-b from-blue-600 via-indigo-500 to-purple-500 text-white flex flex-col p-6 space-y-6 rounded-r-xl shadow-lg">
                 <div className="text-2xl font-bold tracking-wide">DecisionAudit</div>
                 <nav className="flex flex-col space-y-4 text-sm">
-                    <Link href= {`/analytics?company=${encodeURIComponent(company)}&projects=${encodeURIComponent(project)}`} className="hover:text-white/80 transition-colors">Analytics</Link>
+                    {company && project && (
+                        <Link
+                            href={`/analytics?company=${encodeURIComponent(company)}&projects=${encodeURIComponent(project)}`}
+                            className="hover:text-white/80 transition-colors"
+                        >
+                            Analytics
+                        </Link>
+                    )}
                     <Link href="/teams" className="hover:text-white/80 transition-colors">Teams</Link>
                     <Link href="/settings" className="hover:text-white/80 transition-colors">Settings</Link>
                 </nav>
@@ -135,7 +142,9 @@ export default function DashboardPage() {
             <main className="flex-1 px-8 pt-10 pb-0">
                 {/* Company Name */}
                 <h1 className="text-2xl font-bold text-zinc-800 mb-6">
-                    {company.charAt(0).toUpperCase() + company.slice(1).toLowerCase()}
+                    {company
+                        ? company.charAt(0).toUpperCase() + company.slice(1).toLowerCase()
+                        : "Company"}
                 </h1>
                 <div className="flex gap-4 mb-6">
   <span className="inline-block px-4 py-2 rounded-full text-sm font-semibold text-white bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 shadow-sm">

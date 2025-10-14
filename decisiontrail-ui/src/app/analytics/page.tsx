@@ -9,7 +9,7 @@ import {
     Tooltip,
     Legend,
     ResponsiveContainer,
-    CartesianGrid, PieChart, Pie, Cell,
+    CartesianGrid, PieChart, Pie, Cell, PieLabelRenderProps,
 } from 'recharts';
 import Image from "next/image";
 import { useSearchParams } from 'next/navigation';
@@ -19,9 +19,10 @@ import Footer from "@/app/Footer";
 
 
 
+// @ts-ignore
 const AuditAnalyticsDashboard = () => {
-    const [chartData, setChartData] = useState([]);
-    const [teamSummary, setTeamSummary] = useState([]);
+    const [chartData, setChartData] = useState<TeamStats[]>([]);
+    const [teamSummary, setTeamSummary] = useState<TeamSummary[]>([]);
     const [company, setCompany] = useState("");
 
     const [loading, setLoading] = useState(true);
@@ -31,6 +32,12 @@ const AuditAnalyticsDashboard = () => {
     const projects = sessionStorage.getItem('projects');
     const projectList = projects?.split(',').map(p => p.trim()).filter(Boolean) || [];
     const [selectedProject, setSelectedProject] = useState(projectList[0]);
+
+    type TeamSummary = {
+        name: string;
+        count: number;
+        tags: string[];
+    };
 
     const cleanedProject = selectedProject.replace(/\s+/g, '');
     useEffect(() => {
@@ -85,6 +92,18 @@ const AuditAnalyticsDashboard = () => {
         "bg-teal-300"
     ];
 
+    type TeamStats = {
+        team: string;
+        Closed: number;
+        Open: number;
+    };
+
+
+
+    // your actual data
+
+
+
     const pieData = chartData.map(team => ({
         team: team.team,
         total: team.Closed + team.Open
@@ -98,7 +117,9 @@ const AuditAnalyticsDashboard = () => {
 
 
 
-    // @ts-ignore
+
+
+
     return (
         <div className="flex flex-col min-h-screen">
             <Navbar />
@@ -156,7 +177,12 @@ const AuditAnalyticsDashboard = () => {
                                 cx="50%"
                                 cy="50%"
                                 outerRadius={110}
-                                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+
+                                label={(props: { name?: string; percent?: number }) => {
+                                    const name = props.name ?? "Unknown";
+                                    const percent = props.percent ?? 0;
+                                    return `${name}: ${(percent * 100).toFixed(0)}%`;
+                                }}
                             >
                                 <Cell fill="#1e3a8a" />
                                 <Cell fill="#3b82f6" />

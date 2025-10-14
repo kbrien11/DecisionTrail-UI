@@ -11,8 +11,8 @@ export default function RegisterPage() {
         password: '',
         company: '',
         projects: [''],
-        first_name: [''],
-        last_name: [''],
+        first_name: '',
+        last_name: ''
     });
     const [loading, setLoading] = useState(false);
     const [alert, setAlert] = useState({ show: false, type: '', message: '' });
@@ -50,8 +50,12 @@ export default function RegisterPage() {
 
             setAlert({ show: true, type: 'success', message: 'Registration successful!' });
             setFormData({ email: '', password: '', username: '', company: '', projects: [''] , first_name:'' ,last_name: ''  });
-        } catch (err: any) {
-            setAlert({ show: true, type: 'error', message: err.message });
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setAlert({ show: true, type: 'error', message: err.message });
+            } else {
+                setAlert({ show: true, type: 'error', message: 'An unexpected error occurred.' });
+            }
         } finally {
             setLoading(false);
         }
