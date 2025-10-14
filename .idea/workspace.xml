@@ -5,9 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="602d3870-d8ac-4007-aff9-57984a79d5e1" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/decisiontrail-ui/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/decisiontrail-ui/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/decisiontrail-ui/src/next.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/decisiontrail-ui/next.config.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/decisiontrail-ui/next.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/decisiontrail-ui/next.config.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
