@@ -116,7 +116,6 @@ export default function DashboardPage() {
 
 
     return (
-        <Suspense fallback={<div>Loading analytics...</div>}>
 
         <div className="flex flex-col min-h-screen">
             <Navbar />
@@ -304,7 +303,6 @@ export default function DashboardPage() {
         </div>
             <Footer />
         </div>
-        </Suspense>
 
     );
 }

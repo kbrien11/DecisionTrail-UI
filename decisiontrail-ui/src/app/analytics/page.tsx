@@ -121,7 +121,6 @@ const AuditAnalyticsDashboard = () => {
 
 
     return (
-        <Suspense fallback={<div>Loading analytics...</div>}>
 
         <div className="flex flex-col min-h-screen">
             <Navbar />
@@ -247,7 +246,6 @@ const AuditAnalyticsDashboard = () => {
         </div>
             <Footer />
         </div>
-        </Suspense>
     );
 };
 
