@@ -1,7 +1,7 @@
-// app/analytics/page.tsx
-import dynamic from 'next/dynamic'
-import AuditAnalyticsDashboard from './AuditAnalyticsDashboard'
+export const dynamic = 'force-dynamic'
 
-export default function AnalyticsPage() {
-    return <AuditAnalyticsDashboard />
+import AuditWrapper from './AuditWrapper'
+
+export default function AuditPage() {
+    return <AuditWrapper />
 }

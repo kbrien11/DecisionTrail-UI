@@ -1,7 +1,7 @@
-// app/analytics/page.tsx
-import DashboardPage from './DashboardPage'
+export const dynamic = 'force-dynamic'
 
-import dynamic from 'next/dynamic'
-export default function Dashboard() {
-    return <DashboardPage />
+import DashboardWrapper from './DashboardWrapper'
+
+export default function DashboardPage() {
+    return <DashboardWrapper />
 }
