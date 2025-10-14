@@ -5,11 +5,11 @@ const nextConfig: NextConfig = {
         return [
             {
                 source: "/accounts/:path*",
-                destination: "http://127.0.0.1:8000/accounts/:path*" // Added /api/ prefix
+                destination: "https://decisiontrail.onrender.com/accounts/:path*" // Added /api/ prefix
             },
             {
                 source: "/slack/api/:path*",
-                destination: "https://e6b0a5bb9a47.ngrok-free.app/slack/api/:path*"
+                destination: "https://decisiontrail.onrender.com/slack/api/:path*"
             }
 
         ];

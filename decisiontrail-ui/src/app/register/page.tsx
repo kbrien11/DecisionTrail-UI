@@ -1,201 +1,230 @@
 'use client';
+
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function RegisterPage() {
+    const [formData, setFormData] = useState({
+        email: '',
+        username: '',
+        password: '',
+        company: '',
+        projects: [''],
+        first_name: [''],
+        last_name: [''],
+    });
     const [loading, setLoading] = useState(false);
-    const [email, setEmail] = useState('');
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [company, setCompany] = useState('');
-    const [first_name, setFirstName] = useState('');
-    const [last_name, setLastName] = useState('');
-    const router = useRouter();
+    const [alert, setAlert] = useState({ show: false, type: '', message: '' });
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>, index?: number) => {
+        const { name, value } = e.target;
+        if (name === 'projects' && typeof index === 'number') {
+            const updated = [...formData.projects];
+            updated[index] = value;
+            setFormData({ ...formData, projects: updated });
+        } else {
+            setFormData({ ...formData, [name]: value });
+        }
+    };
+
+    const addProjectField = () => {
+        setFormData({ ...formData, projects: [...formData.projects, ''] });
+    };
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+        setAlert({ show: false, type: '', message: '' });
+
         try {
-            const res = await fetch('accounts/register', {
+            const res = await fetch('https://decisiontrail.onrender.com/accounts/register', {
                 method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    email,
-                    password,
-                    username,
-                    company,
-                    first_name,
-                    last_name
-                }),
+                body: JSON.stringify(formData),
             });
 
-            if (res.ok) {
-                router.push('/login');
-            } else {
-                console.error('Registration failed');
-            }
-        } catch (error) {
-            console.error('Registration error:', error);
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.detail || 'Registration failed');
+
+            setAlert({ show: true, type: 'success', message: 'Registration successful!' });
+            setFormData({ email: '', password: '', username: '', company: '', projects: [''] , first_name:'' ,last_name: ''  });
+        } catch (err: any) {
+            setAlert({ show: true, type: 'error', message: err.message });
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            {/* Logo Section */}
-            {/* Logo Section */}
-            <div className="absolute top-0 right-0 mt-8 mr-8">
-                <Link href="/" className="flex items-center space-x-2">
-                    <div className="relative w-64 h-20"> {/* Increased from w-40 h-12 to w-64 h-20 */}
+        <div className="min-h-screen flex flex-col sm:flex-row">
+            {/* Left Panel */}
+            <div className="sm:w-1/2 w-full bg-gradient-to-br from-blue-600 via-indigo-500 to-purple-500 text-white flex flex-col justify-center items-center px-6 py-12 rounded-r-xl shadow-lg">
+                <h1 className="text-4xl font-bold mb-4 text-center drop-shadow-lg">Welcome to Audit Trail</h1>
+                <div className="relative aspect-[3/1] w-72 sm:w-80 mb-6 bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 rounded-xl p-1 shadow-md">
+                    <div className="relative w-full h-full bg-white rounded-lg flex items-center justify-center">
                         <Image
-                            src="/logo.png"
-                            alt="Company Logo"
+                            src="/company_logo.png"
+                            alt="DecisionAudit Logo"
                             fill
-                            className="object-contain"
-                            priority
+                            className="object-contain p-2 sm:p-4"
                         />
                     </div>
-                </Link>
+                </div>
+                <p className="text-lg text-center text-white/90 max-w-sm leading-relaxed mb-4">
+                    Sign up to track your company’s biggest decisions.
+                </p>
+                <p className="text-sm text-center text-white/70 italic max-w-xs">
+                    Strategic clarity starts here.
+                </p>
             </div>
 
+            {/* Right Panel */}
+            <div className="sm:w-1/2 w-full flex items-center justify-center bg-white px-6 py-12">
+                <div className="w-full max-w-md space-y-8">
+                    {alert.show && (
+                        <div className={`px-4 py-3 rounded-md shadow-md text-white ${alert.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}>
+                            <p className="text-sm font-medium">{alert.message}</p>
+                        </div>
+                    )}
 
-            {/* Main Content */}
-            <div className="flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-                <div className="sm:mx-auto sm:w-full sm:max-w-md">
-                    <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                        Create your account
-                    </h2>
-                    <p className="mt-2 text-center text-sm text-gray-600">
-                        Already have an account?{' '}
-                        <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500">
-                            Sign in
-                        </Link>
-                    </p>
-                </div>
-
-                <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-                    <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-                        <form className="space-y-6" onSubmit={handleRegister}>
-                            <div className="grid grid-cols-1 gap-6">
-                                {/* Email Field */}
-                                <div>
-                                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                                        Email address
-                                    </label>
-                                    <input
-                                        id="email"
-                                        type="email"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                        required
-                                    />
-                                </div>
-
-                                {/* Username Field */}
-                                <div>
-                                    <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                                        Username
-                                    </label>
-                                    <input
-                                        id="username"
-                                        type="text"
-                                        value={username}
-                                        onChange={(e) => setUsername(e.target.value)}
-                                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                        required
-                                    />
-                                </div>
-
-                                {/* First Name and Last Name Row */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label htmlFor="first_name" className="block text-sm font-medium text-gray-700">
-                                            First Name
-                                        </label>
-                                        <input
-                                            id="first_name"
-                                            type="text"
-                                            value={first_name}
-                                            onChange={(e) => setFirstName(e.target.value)}
-                                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="last_name" className="block text-sm font-medium text-gray-700">
-                                            Last Name
-                                        </label>
-                                        <input
-                                            id="last_name"
-                                            type="text"
-                                            value={last_name}
-                                            onChange={(e) => setLastName(e.target.value)}
-                                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                            required
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Company Field */}
-                                <div>
-                                    <label htmlFor="phone_number" className="block text-sm font-medium text-gray-700">
-                                        Company
-                                    </label>
-                                    <input
-                                        id="phone_number"
-                                        type="tel"
-                                        value={company}
-                                        onChange={(e) => setCompany(e.target.value)}
-                                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                        required
-                                    />
-                                </div>
-
-                                {/* Password Field */}
-                                <div>
-                                    <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                                        Password
-                                    </label>
-                                    <input
-                                        id="password"
-                                        type="password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-                                >
-                                    {loading ? (
-                                        <span className="flex items-center">
-                                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                            </svg>
-                                            Creating account...
-                                        </span>
-                                    ) : (
-                                        'Create account'
-                                    )}
-                                </button>
-                            </div>
-                        </form>
+                    <div>
+                        <h2 className="text-center text-2xl font-semibold text-gray-900">Create an Account</h2>
                     </div>
+
+                    <form className="space-y-6" onSubmit={handleRegister}>
+                        <div>
+                            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+                            <input
+                                id="email"
+                                name="email"
+                                type="email"
+                                maxLength={20}
+                                required
+                                value={formData.email}
+                                onChange={handleChange}
+                                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-zinc-500 focus:outline-none"
+                            />
+                        </div>
+
+                        <div>
+                            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+                            <input
+                                id="password"
+                                name="password"
+                                type="password"
+                                maxLength={20}
+                                required
+                                value={formData.password}
+                                onChange={handleChange}
+                                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-zinc-500 focus:outline-none"
+                            />
+                        </div>
+
+                        <div>
+                            <label htmlFor="username" className="block text-sm font-medium text-gray-700">Username</label>
+                            <input
+                                id="username"
+                                name="username"
+                                type="text"
+                                maxLength={20}
+                                required
+                                value={formData.username}
+                                onChange={handleChange}
+                                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-zinc-500 focus:outline-none"
+                            />
+                        </div>
+
+                        <div>
+                            <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">firstName</label>
+                            <input
+                                id="first_name"
+                                name="first_name"
+                                type="text"
+                                maxLength={20}
+                                required
+                                value={formData.first_name}
+                                onChange={handleChange}
+                                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-zinc-500 focus:outline-none"
+                            />
+                        </div>
+
+                        <div>
+                            <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">LastName</label>
+                            <input
+                                id="last_name"
+                                name="last_name"
+                                type="text"
+                                maxLength={20}
+                                required
+                                value={formData.last_name}
+                                onChange={handleChange}
+                                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-zinc-500 focus:outline-none"
+                            />
+                        </div>
+
+                        <div>
+                            <label htmlFor="company" className="block text-sm font-medium text-gray-700">Company</label>
+                            <input
+                                id="company"
+                                name="company"
+                                type="text"
+                                maxLength={50}
+                                value={formData.company}
+                                onChange={handleChange}
+                                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-zinc-500 focus:outline-none"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Projects</label>
+                            {formData.projects.map((project, index) => (
+                                <input
+                                    key={index}
+                                    name="projects"
+                                    type="text"
+                                    maxLength={100}
+                                    placeholder={`Project ${index + 1}`}
+                                    value={project}
+                                    onChange={(e) => handleChange(e, index)}
+                                    className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm mb-2 focus:ring-2 focus:ring-zinc-500 focus:outline-none"
+                                />
+                            ))}
+                            <button
+                                type="button"
+                                onClick={addProjectField}
+                                className="text-sm text-blue-600 hover:underline mt-1"
+                            >
+                                + Add another project
+                            </button>
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full py-2 px-4 text-white font-semibold rounded-md bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 hover:brightness-105 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {loading ? (
+                                <span className="flex items-center justify-center">
+                  <svg className="animate-spin mr-2 h-5 w-5 text-white" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Registering...
+                </span>
+                            ) : (
+                                'Register'
+                            )}
+                        </button>
+
+                        <p className="text-sm text-center text-gray-600">
+                            Already have an account?{' '}
+                            <Link href="/login" className="text-zinc-600 hover:text-zinc-800 hover:underline font-bold transition">
+                                Log in
+                            </Link>
+                        </p>
+                    </form>
                 </div>
             </div>
         </div>

@@ -13,6 +13,9 @@ import {
 } from 'recharts';
 import Image from "next/image";
 import { useSearchParams } from 'next/navigation';
+import Navbar from "@/app/Navbar";
+import Footer from "@/app/Footer";
+
 
 
 
@@ -25,7 +28,7 @@ const AuditAnalyticsDashboard = () => {
 
     const searchParams = useSearchParams();
     const companyLogin = searchParams.get('company');
-    const projects = searchParams.get('projects');
+    const projects = sessionStorage.getItem('projects');
     const projectList = projects?.split(',').map(p => p.trim()).filter(Boolean) || [];
     const [selectedProject, setSelectedProject] = useState(projectList[0]);
 
@@ -36,12 +39,12 @@ const AuditAnalyticsDashboard = () => {
                 const [analyticsRes, summaryRes] = await Promise.all([
 
 
-                fetch(`http://localhost:8000/slack/api/analytics?company_domain=${companyLogin}&project=${cleanedProject}`, {
+                fetch(`https://decisiontrail.onrender.com/slack/api/analytics?company_domain=${companyLogin}&project=${cleanedProject}`, {
                         method: 'GET',
                         credentials: 'include',
                         headers: { 'Accept': 'application/json' },
                     }),
-                    fetch(`http://localhost:8000/slack/api/getTeams?company_domain=${companyLogin}&project=${cleanedProject}`, {
+                    fetch(`https://decisiontrail.onrender.com/slack/api/getTeams?company_domain=${companyLogin}&project=${cleanedProject}`, {
                         method: 'GET',
                         credentials: 'include',
                         headers: { 'Accept': 'application/json' },
@@ -97,20 +100,14 @@ const AuditAnalyticsDashboard = () => {
 
     // @ts-ignore
     return (
-        <div className="min-h-screen bg-gray-50 px-6 py-8">
+        <div className="flex flex-col min-h-screen">
+            <Navbar />
+        <div className="flex-grow bg-gray-50 px-6 py-8">
+
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 mt-6 mb-8">
                 {/* Left: Logo + Project Selector */}
                 <div className="flex flex-col items-center sm:items-start">
-                    <div className="relative w-64 sm:w-72 h-24 mb-2 flex items-center justify-center">
-                        <Image
-                            src="/company_logo.png"
-                            alt="DecisionAudit Logo"
-                            fill
-                            className="object-contain"
-                        />
-                    </div>
-
                     <select
                         value={selectedProject}
                         onChange={(e) => setSelectedProject(e.target.value)}
@@ -124,21 +121,6 @@ const AuditAnalyticsDashboard = () => {
                     </select>
                 </div>
 
-                {/* Right: Filters */}
-                <div className="flex flex-wrap gap-4">
-                    {['Date Range', 'Audit Type', 'Status', 'Confidence Level'].map((label) => (
-                        <div key={label} className="w-48 rounded-md shadow-sm">
-                            <div className="h-1 w-full bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 rounded-t" />
-                            <select
-                                className="w-full bg-white text-gray-800 text-sm px-4 py-2 rounded-b-md focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500 transition"
-                            >
-                                <option disabled selected>{label}</option>
-                                <option>Option 1</option>
-                                <option>Option 2</option>
-                            </select>
-                        </div>
-                    ))}
-                </div>
             </div>
 
             <div className="bg-gradient-to-br from-white via-gray-50 to-gray-100 p-6 rounded-xl shadow-lg mb-8 border border-gray-200">
@@ -188,29 +170,6 @@ const AuditAnalyticsDashboard = () => {
 
 
             </div>
-            {/*<div className="bg-white p-6 rounded shadow mb-8">*/}
-            {/*    <h2 className="text-lg font-semibold text-gray-800 mb-4">Total Audits By Team</h2>*/}
-            {/*    <ResponsiveContainer width="100%" height={300}>*/}
-            {/*        <PieChart>*/}
-            {/*            <Tooltip />*/}
-            {/*            <Legend />*/}
-            {/*            <Pie*/}
-            {/*                data={pieData}*/}
-            {/*                dataKey="total"*/}
-            {/*                nameKey="team"*/}
-            {/*                cx="50%"*/}
-            {/*                cy="50%"*/}
-            {/*                outerRadius={100}*/}
-            {/*                label*/}
-            {/*            >*/}
-            {/*                <Cell fill="#1e3a8a" />*/}
-            {/*                <Cell fill="#3b82f6" />*/}
-            {/*                <Cell fill="#93c5fd" />*/}
-            {/*                /!* Add more <Cell /> if you have more teams *!/*/}
-            {/*            </Pie>*/}
-            {/*        </PieChart>*/}
-            {/*    </ResponsiveContainer>*/}
-            {/*</div>*/}
 
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
                 {teamSummary.map((team) => (
@@ -257,6 +216,8 @@ const AuditAnalyticsDashboard = () => {
                     </div>
                 ))}
             </div>
+        </div>
+            <Footer />
         </div>
     );
 };

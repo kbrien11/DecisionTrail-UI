@@ -8,7 +8,7 @@ import Image from 'next/image';
 
 export default function LoginPage() {
     const [loading, setLoading] = useState(false);
-    const [email, setIdentifier] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [company, setCompany] = useState('');
 
@@ -19,7 +19,7 @@ export default function LoginPage() {
         e.preventDefault();
         setLoading(true);
         try {
-            const res = await fetch('accounts/login', {
+            const res = await fetch('https://decisiontrail.onrender.com/accounts/login', {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
@@ -31,6 +31,7 @@ export default function LoginPage() {
             if (res.ok) {
                 const data = await res.json();
                 setCompany(data.company);
+                sessionStorage.setItem("projects",data.projects)
                 setAlert({ show: true, message: 'Login successful! Redirecting...', type: 'success' });
                 setTimeout(() => router.push(`/analytics?company=${encodeURIComponent(data.company)}&projects=${encodeURIComponent(data.projects)}`), 1500);
             } else {
@@ -92,26 +93,20 @@ export default function LoginPage() {
                     </div>
 
                     <form className="space-y-6" onSubmit={handleLogin}>
-                        <div>
-                            <label htmlFor="identifier" className="block text-sm font-medium text-gray-700">
-                                Email or Username
-                            </label>
+                        <div className="w-full rounded-xl p-[2px] bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 focus-within:ring-2 focus-within:ring-purple-500">
                             <input
-                                id="identifier"
-                                name="identifier"
-                                type="text"
+                                id="email"
+                                name="email"
+                                type="email"
                                 required
-                                autoFocus
                                 value={email}
-                                onChange={(e) => setIdentifier(e.target.value)}
-                                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-zinc-500  focus:outline-none"
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="block w-full px-4 py-2 rounded-xl bg-white border-none focus:outline-none text-gray-900"
+                                placeholder="Email or Username"
                             />
                         </div>
 
-                        <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                                Password
-                            </label>
+                        <div className="w-full rounded-xl p-[2px] bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 focus-within:ring-2 focus-within:ring-purple-500">
                             <input
                                 id="password"
                                 name="password"
@@ -119,7 +114,8 @@ export default function LoginPage() {
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-zinc-500 focus:outline-none"
+                                className="block w-full px-4 py-2 rounded-xl bg-white border-none focus:outline-none text-gray-900"
+                                placeholder="Password"
                             />
                         </div>
 

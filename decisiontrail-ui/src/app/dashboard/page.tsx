@@ -3,6 +3,9 @@
 import {JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal, useEffect, useState} from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import Navbar from "@/app/Navbar";
+import {Foldit} from "next/dist/compiled/@next/font/dist/google";
+import Footer from "@/app/Footer";
 
 
 
@@ -17,7 +20,13 @@ export default function DashboardPage() {
     const [page, setPage] = useState(1);
     const [error, setError] = useState(false);
     const [loading, setLoading] = useState(false);
-    const itemsPerPage = 2;
+    const [itemsPerPage, setItemsPerPage] = useState(4);
+    const [pagination, setPagination] = useState({
+        totalPages: 1,
+        currentPage: 1,
+        hasNext: false,
+        hasPrevious: false,
+    });
 
     const params = new URLSearchParams();
 
@@ -29,7 +38,7 @@ export default function DashboardPage() {
 
     params.append('company_domain', 'decisiontrail');
     params.append('page', page.toString());
-    params.append('page_size', '2');
+    params.append('page_size', '4');
     if (team != null) {
         params.append('team', team);
     }
@@ -44,9 +53,11 @@ export default function DashboardPage() {
 
 
     useEffect(() => {
+        console.log("Fetching page:", page);
+
         const fetchDecisions = async () => {
             try {
-                const res = await fetch(`http://localhost:8000/slack/api/decisions?company_domain=${company}&page=1&page_size=4&project=${project}`, {
+                const res = await fetch(`https://decisiontrail.onrender.com/slack/api/decisions?company_domain=${company}&page=${page}&page_size=${itemsPerPage}&project=${project}&team=${team}`, {
                     method: 'GET',
                     credentials: 'include', // ✅ sends cookies
                     headers: {
@@ -64,6 +75,12 @@ export default function DashboardPage() {
                 console.log('Fetched decisions:', data);
                 setDecisions(data.decisions);
                 setTeams(data.teams);
+                setPagination({
+                    totalPages: data.total_pages,
+                    currentPage: data.current_page,
+                    hasNext: data.has_next,
+                    hasPrevious: data.has_previous,
+                });
             } catch (err) {
                 console.error('Fetch error:', err);
                 setError(true);
@@ -73,7 +90,7 @@ export default function DashboardPage() {
         };
 
         fetchDecisions();
-    }, []);
+    }, [page,itemsPerPage]);
 
     type Decision = {
         id: number;
@@ -96,14 +113,14 @@ export default function DashboardPage() {
             (activeTeam !== 'All' ? d.team === activeTeam : true)
         );
 
-    const paginatedDecisions = filteredDecisions.slice(
-        (page - 1) * itemsPerPage,
-        page * itemsPerPage
-    );
+
 
     // @ts-ignore
     return (
-        <div className="min-h-screen flex bg-gray-100">
+        <div className="flex flex-col min-h-screen">
+            <Navbar />
+        <div className="flex flex-1 bg-gray-100">
+
             {/* Sidebar */}
             <aside className="w-64 bg-gradient-to-b from-blue-600 via-indigo-500 to-purple-500 text-white flex flex-col p-6 space-y-6 rounded-r-xl shadow-lg">
                 <div className="text-2xl font-bold tracking-wide">DecisionAudit</div>
@@ -115,7 +132,7 @@ export default function DashboardPage() {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 px-8 py-10">
+            <main className="flex-1 px-8 pt-10 pb-0">
                 {/* Company Name */}
                 <h1 className="text-2xl font-bold text-zinc-800 mb-6">
                     {company.charAt(0).toUpperCase() + company.slice(1).toLowerCase()}
@@ -162,7 +179,7 @@ export default function DashboardPage() {
 
                 {/* Decision Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {paginatedDecisions.map((d: Decision) => (
+                    {filteredDecisions.map((d: Decision) => (
                         <div
                             key={d.id}
                             className="relative bg-white rounded-xl shadow-md hover:shadow-lg transition-transform hover:scale-[1.01] p-6"
@@ -227,68 +244,55 @@ export default function DashboardPage() {
                         </div>
                     ))}
                 </div>
-      {/*          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">*/}
-      {/*              {paginatedDecisions.map((d: Decision) => (*/}
-      {/*                  <div*/}
-      {/*                      key={d.id}*/}
-      {/*                      className="bg-white rounded-xl shadow-lg hover:shadow-xl border-l-4 border-zinc-700 p-6 transition-transform hover:scale-[1.01]"*/}
-      {/*                  >*/}
-      {/*                      <h3 className="text-lg font-bold text-zinc-800 mb-2">{d.summary}</h3>*/}
-      {/*                      <p className="text-sm text-zinc-500 mb-1">{d.created_at}</p>*/}
-
-      {/*                      <div className="flex flex-wrap gap-2 mb-2">*/}
-      {/*                          {d.tags*/}
-      {/*                              ?.split(',')*/}
-      {/*                              .map((tag: string, i: Key | null | undefined) => (*/}
-      {/*                                  <span*/}
-      {/*                                      key={i}*/}
-      {/*                                      className="px-2 py-1 text-xs bg-zinc-100 text-zinc-700 rounded-full"*/}
-      {/*                                  >*/}
-      {/*  {tag.trim()}*/}
-      {/*</span>*/}
-      {/*                              ))}*/}
-      {/*                      </div>*/}
-
-      {/*                      <p className="text-sm text-zinc-700 mb-2">*/}
-      {/*                          <span className="font-medium">Rationale:</span> {d.rationale}*/}
-      {/*                      </p>*/}
-
-      {/*                      <div className="grid grid-cols-2 gap-2 text-sm text-zinc-700 mb-2">*/}
-      {/*                          <p><span className="font-medium">Confidence:</span> {d.confidence}</p>*/}
-      {/*                          <p><span className="font-medium">Owner:</span> {d.owner}</p>*/}
-      {/*                          <p><span className="font-medium">Team:</span> {d.team}</p>*/}
-      {/*                      </div>*/}
-
-      {/*                      <a*/}
-      {/*                          href={d.jiraUrl}*/}
-      {/*                          target="_blank"*/}
-      {/*                          className="inline-block mt-2 text-sm text-blue-600 hover:underline font-medium"*/}
-      {/*                      >*/}
-      {/*                          🔗 View Jira Issue*/}
-      {/*                      </a>*/}
-      {/*                  </div>*/}
-      {/*              ))}*/}
-      {/*          </div>*/}
 
                 {/* Pagination */}
-                <div className="flex justify-center items-center mt-10 gap-4">
-                    <button
-                        onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                        disabled={page === 1}
-                        className="px-4 py-2 bg-zinc-700 text-white rounded-md hover:bg-zinc-800 disabled:opacity-50 font-bold"
-                    >
-                        Prev
-                    </button>
-                    <span className="text-sm font-medium text-gray-700">Page {page}</span>
-                    <button
-                        onClick={() => setPage((p) => p + 1)}
-                        disabled={page * itemsPerPage >= filteredDecisions.length}
-                        className="px-4 py-2 bg-zinc-700 text-white rounded-md hover:bg-zinc-800 disabled:opacity-50 font-bold"
-                    >
-                        Next
-                    </button>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-10 px-4 gap-6">
+                    {/* Page Controls */}
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                            disabled={!pagination.hasPrevious}
+                            className="px-4 py-2 bg-gradient-to-r from-zinc-700 to-zinc-800 text-white rounded-md hover:opacity-90 disabled:opacity-50 font-semibold transition"
+                        >
+                            ← Prev
+                        </button>
+                        <span className="text-sm font-medium text-gray-700">
+      Page <span className="font-bold">{pagination.currentPage}</span> of <span className="font-bold">{pagination.totalPages}</span>
+    </span>
+                        <button
+                            onClick={() => setPage((p) => p + 1)}
+                            disabled={!pagination.hasNext}
+                            className="px-4 py-2 bg-gradient-to-r from-zinc-700 to-zinc-800 text-white rounded-md hover:opacity-90 disabled:opacity-50 font-semibold transition"
+                        >
+                            Next →
+                        </button>
+                    </div>
+
+                    {/* Items Per Page Selector */}
+                    <div className="flex items-center gap-2">
+                        <label htmlFor="itemsPerPage" className="text-sm text-gray-600 font-medium">
+                            Items per page:
+                        </label>
+                        <select
+                            id="itemsPerPage"
+                            value={itemsPerPage}
+                            onChange={(e) => {
+                                setItemsPerPage(Number(e.target.value));
+                                setPage(1); // reset to first page
+                            }}
+                            className="px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                        >
+                            {[4, 6, 8, 10, 12].map((count) => (
+                                <option key={count} value={count}>
+                                    {count}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
             </main>
+        </div>
+            <Footer />
         </div>
     );
 }
