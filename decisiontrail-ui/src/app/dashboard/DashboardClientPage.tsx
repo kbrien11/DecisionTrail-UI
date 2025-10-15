@@ -11,7 +11,7 @@ import Footer from "@/app/Footer";
 export default function DashboardClientPage() {
     const [search, setSearch] = useState('');
     const [filterOwner, setFilterOwner] = useState('');
-    const [filterConfidence, setFilterConfidence] = useState('');
+    const [filterStatus, setFilterStatus] = useState('');
     const [decisions, setDecisions] = useState([]);
     const [teams, setTeams] = useState([]);
     const [activeTeam, setActiveTeam] = useState('All');
@@ -34,9 +34,11 @@ export default function DashboardClientPage() {
     const project = searchParams.get('project');
 
 
-    params.append('company_domain', 'decisiontrail');
-    params.append('page', page.toString());
-    params.append('page_size', '4');
+    if (company) params.append("company_domain", company);
+    if (page) params.append("page", String(page));
+    if (itemsPerPage) params.append("page_size", String(itemsPerPage));
+    if (project) params.append("project", project);
+
     if (team != null) {
         params.append('team', team);
     }
@@ -46,7 +48,7 @@ export default function DashboardClientPage() {
 
     if (search) params.append('search', search);
     if (filterOwner) params.append('owner', filterOwner);
-    if (filterConfidence) params.append('confidence', filterConfidence);
+    // if (filterStatus) params.append('confidence', filterStatus);
     if (activeTeam && activeTeam !== 'All') params.append('team', activeTeam);
 
 
@@ -55,7 +57,12 @@ export default function DashboardClientPage() {
 
         const fetchDecisions = async () => {
             try {
-                const res = await fetch(`https://decisiontrail.onrender.com/slack/api/decisions?company_domain=${company}&page=${page}&page_size=${itemsPerPage}&project=${project}&team=${team}`, {
+                if (filterStatus) {
+                    params.append("status", filterStatus);
+                }
+                const url = `https://decisiontrail.onrender.com/slack/api/decisions?${params.toString()}`;
+
+                const res = await fetch(url, {
                     method: 'GET',
                     credentials: 'include', // ✅ sends cookies
                     headers: {
@@ -88,9 +95,10 @@ export default function DashboardClientPage() {
         };
 
         fetchDecisions();
-    }, [page,itemsPerPage]);
+    }, [page,itemsPerPage,filterStatus]);
 
     type Decision = {
+        status: string;
         id: number;
         summary: string;
         created_at: string;
@@ -107,7 +115,6 @@ export default function DashboardClientPage() {
         .filter((d:Decision) =>
             d.summary.toLowerCase().includes(search.toLowerCase()) &&
             (filterOwner ? d.owner === filterOwner : true) &&
-            (filterConfidence ? d.confidence === filterConfidence : true) &&
             (activeTeam !== 'All' ? d.team === activeTeam : true)
         );
 
@@ -173,14 +180,14 @@ export default function DashboardClientPage() {
                             </select>
 
                             <select
-                                value={filterConfidence}
-                                onChange={(e) => setFilterConfidence(e.target.value)}
+                                value={filterStatus}
+                                onChange={(e) => setFilterStatus(e.target.value)}
                                 className="px-4 py-2 border border-gray-300 rounded-md shadow-sm"
                             >
-                                <option value="">All Confidence</option>
-                                <option value="High">High</option>
-                                <option value="Medium">Medium</option>
-                                <option value="Low">Low</option>
+                                <option value="">All Status</option>
+                                <option value="open">Open</option>
+                                <option value="cancelled">Cancelled</option>
+                                <option value="closed">Closed</option>
                             </select>
                         </div>
                     </div>
@@ -201,10 +208,26 @@ export default function DashboardClientPage() {
                                 </h3>
 
                                 {/* Team pill */}
-                                <div className="mb-4">
-        <span className="inline-block px-3 py-1 text-xs font-semibold text-white bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 rounded-full shadow-sm">
-          {d.team}
-        </span>
+                                <div className="flex items-center justify-between mb-4">
+                                    {/* Team badge */}
+                                    <span className="inline-block px-3 py-1 text-xs font-semibold text-white bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 rounded-full shadow-sm">
+    {d.team}
+  </span>
+
+                                    {/* Status badge */}
+                                    <span
+                                        className={`inline-block px-3 py-1 text-xs font-semibold rounded-full shadow-sm ${
+                                            d.status === 'open'
+                                                ? 'bg-green-100 text-green-700'
+                                                : d.status === 'closed'
+                                                    ? 'bg-yellow-100 text-yellow-700'
+                                                    : d.status === 'cancelled'
+                                                        ? 'bg-gray-200 text-gray-600'
+                                                        : 'bg-red-100 text-red-700'
+                                        }`}
+                                    >
+    {d.status.toUpperCase()}
+  </span>
                                 </div>
 
                                 {/* Date */}
@@ -241,14 +264,35 @@ export default function DashboardClientPage() {
                                     <p><span className="font-medium text-zinc-800">Owner:</span> {d.owner}</p>
                                 </div>
 
-                                {/* Jira Link */}
-                                <a
-                                    href={d.jiraUrl}
-                                    target="_blank"
-                                    className="inline-block text-sm font-medium text-blue-600 hover:text-indigo-600 transition-colors"
-                                >
-                                    🔗 View Jira Issue
-                                </a>
+                                <div className="flex items-center justify-between">
+                                    {/* Jira Link */}
+                                    <a
+                                        href={d.jiraUrl}
+                                        target="_blank"
+                                        className="inline-block text-sm font-medium text-blue-600 hover:text-indigo-600 transition-colors"
+                                    >
+                                        🔗 View Jira Issue
+                                    </a>
+
+                                    {/* Conditional Action Icon */}
+                                    {d.status === 'open' ? (
+                                        <button
+                                            onClick={() => console.log(d.id)}
+                                            className="text-gray-500 hover:text-blue-600 transition-colors"
+                                            title="Edit"
+                                        >
+                                            ✏️
+                                        </button>
+                                    ) : d.status === 'closed' || d.status === 'cancelled' ? (
+                                        <button
+                                            onClick={() => console.log(d.id)}
+                                            className="text-gray-500 hover:text-red-600 transition-colors"
+                                            title="Delete"
+                                        >
+                                            🗑️
+                                        </button>
+                                    ) : null}
+                                </div>
                             </div>
                         ))}
                     </div>
