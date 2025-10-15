@@ -153,12 +153,17 @@ const AuditAnalyticsDashboard = () => {
 
   </span>
                         </h2>
-                        <span className="text-sm text-gray-500">Updated this week</span>
-                        <span> {selectedProject}</span>
+                        <div className="flex items-center gap-4 text-sm text-gray-700">
+                            <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold text-sm shadow-sm">
+  {selectedProject}
+</span>
+                            <span className="text-gray-500 italic">Updated this week</span>
+                        </div>
+
                     </div>
 
                     <div className="bg-white rounded-lg shadow-sm p-4">
-                        <ResponsiveContainer width="100%" height={300}>
+                        {pieData.length >0 ? <ResponsiveContainer width="100%" height={300}>
                             <PieChart>
                                 <Tooltip
                                     contentStyle={{ backgroundColor: "#f9fafb", borderRadius: "8px", border: "1px solid #e5e7eb" }}
@@ -190,7 +195,15 @@ const AuditAnalyticsDashboard = () => {
                                     {/* Add more <Cell /> if needed */}
                                 </Pie>
                             </PieChart>
-                        </ResponsiveContainer>
+                        </ResponsiveContainer>:<div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+                            <p className="text-lg font-semibold text-gray-800">
+                                There are currently no Decision audits,
+                            </p>
+                            <p className="text-lg font-semibold text-gray-800">
+                                go make some Decisions!
+                            </p>
+                        </div> }
+
                     </div>
 
 
