@@ -6,6 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="602d3870-d8ac-4007-aff9-57984a79d5e1" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/decisiontrail-ui/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/decisiontrail-ui/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/decisiontrail-ui/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/decisiontrail-ui/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/decisiontrail-ui/src/app/dashboard/DashboardClientPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/decisiontrail-ui/src/app/dashboard/DashboardClientPage.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import Navbar from "@/app/Navbar";
 import Footer from "@/app/Footer";
+import EditDecisionModal from "@/app/components/EditDecisionModal";
+import {Decision} from "@/app/types/Decision";
 
 
 
@@ -18,7 +20,11 @@ export default function DashboardClientPage() {
     const [page, setPage] = useState(1);
     const [error, setError] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [alert, setAlert] = useState<{ type: "success" | "error"; message: string } | null>(null);
     const [itemsPerPage, setItemsPerPage] = useState(4);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedDecision, setSelectedDecision] = useState<Decision | null>(null);
+    const [refreshKey, setRefreshKey] = useState(0);
     const [pagination, setPagination] = useState({
         totalPages: 1,
         currentPage: 1,
@@ -50,6 +56,11 @@ export default function DashboardClientPage() {
     if (filterOwner) params.append('owner', filterOwner);
     // if (filterStatus) params.append('confidence', filterStatus);
     if (activeTeam && activeTeam !== 'All') params.append('team', activeTeam);
+
+    const handleEditClick = (decision:Decision) => {
+        setSelectedDecision(decision);
+        setIsModalOpen(true);
+    };
 
 
     useEffect(() => {
@@ -95,20 +106,10 @@ export default function DashboardClientPage() {
         };
 
         fetchDecisions();
-    }, [page,itemsPerPage,filterStatus]);
+    }, [page,itemsPerPage,filterStatus,refreshKey]);
 
-    type Decision = {
-        status: string;
-        id: number;
-        summary: string;
-        created_at: string;
-        tags: string;
-        rationale: string;
-        confidence: string;
-        owner: string;
-        team: string;
-        jiraUrl: string;
-    };
+ ;
+
 
     console.log('decisions', decisions);
     const filteredDecisions = decisions
@@ -117,6 +118,36 @@ export default function DashboardClientPage() {
             (filterOwner ? d.owner === filterOwner : true) &&
             (activeTeam !== 'All' ? d.team === activeTeam : true)
         );
+
+    const handleSave = async (updated: Decision) => {
+
+        try {handleSave
+            const res = await fetch(`https://decisiontrail.onrender.com/slack/api/decisions/update`,
+                {
+                    method: "PUT",
+                    credentials: 'include', // ✅ sends cookies
+                    headers: {"Content-Type": "application/json"},
+                    body:JSON.stringify( {
+                        id: updated.id,
+                        summary: updated.summary,
+                        status: updated.status,
+                        rationale: updated.rationale
+                    }),
+                });
+
+            if (!res.ok) throw new Error("Failed to update decision");
+
+            setAlert({ type: "success", message: "Decision updated successfully!" });
+            setTimeout(() => {
+                setAlert(null);
+                setRefreshKey((prev) => prev + 1); // triggers useEffect
+                setIsModalOpen(false); // close modal
+            }, 3000);
+        } catch (err) {
+            setAlert({ type: "error", message: "Something went wrong. Please try again." });
+            setTimeout(() => setAlert(null), 3000);
+        }
+    };
 
 
 
@@ -191,6 +222,18 @@ export default function DashboardClientPage() {
                             </select>
                         </div>
                     </div>
+
+                    {alert && (
+                        <div
+                            className={`mb-4 px-4 py-2 rounded text-sm ${
+                                alert.type === "success"
+                                    ? "bg-green-100 text-green-800"
+                                    : "bg-red-100 text-red-800"
+                            }`}
+                        >
+                            {alert.message}
+                        </div>
+                    )}
 
                     {/* Decision Cards */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -276,13 +319,13 @@ export default function DashboardClientPage() {
 
                                     {/* Conditional Action Icon */}
                                     {d.status === 'open' ? (
-                                        <button
-                                            onClick={() => console.log(d.id)}
-                                            className="text-gray-500 hover:text-blue-600 transition-colors"
-                                            title="Edit"
-                                        >
-                                            ✏️
-                                        </button>
+                                        <>
+                                            <button onClick={() => handleEditClick(d)} title="Edit">✏️</button>
+                                            {selectedDecision && <EditDecisionModal
+                                                isOpen={isModalOpen}
+                                                onClose={() => setIsModalOpen(false)}
+                                                decision={selectedDecision}
+                                                onSave={handleSave}/> }</>
                                     ) : d.status === 'closed' || d.status === 'cancelled' ? (
                                         <button
                                             onClick={() => console.log(d.id)}
