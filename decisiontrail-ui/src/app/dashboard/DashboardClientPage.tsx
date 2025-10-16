@@ -122,13 +122,12 @@ export default function DashboardClientPage() {
     const handleSave = async (updated: Decision) => {
 
         try {handleSave
-            const res = await fetch(`https://decisiontrail.onrender.com/slack/api/decisions/update`,
+            const res = await fetch(`https://decisiontrail.onrender.com/slack/api/decisions/update/${updated.id}`,
                 {
                     method: "PUT",
                     credentials: 'include', // ✅ sends cookies
                     headers: {"Content-Type": "application/json"},
                     body:JSON.stringify( {
-                        id: updated.id,
                         summary: updated.summary,
                         status: updated.status,
                         rationale: updated.rationale
