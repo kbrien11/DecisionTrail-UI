@@ -8,7 +8,7 @@ export interface Decision {
     created_at: string;
     tags: string;
     confidence: string;
-    owner: string;
+    username: string;
     team: string;
     jiraUrl: string;
 }

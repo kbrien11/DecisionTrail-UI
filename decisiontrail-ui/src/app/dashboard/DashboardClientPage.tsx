@@ -31,6 +31,8 @@ export default function DashboardClientPage() {
         hasNext: false,
         hasPrevious: false,
     });
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [decisionToDelete, setDecisionToDelete] = useState<Decision | null>(null);
 
     const params = new URLSearchParams();
 
@@ -61,6 +63,28 @@ export default function DashboardClientPage() {
         setSelectedDecision(decision);
         setIsModalOpen(true);
     };
+
+    const deleteDecisionById  = async (decision:Decision) =>{
+try{
+        const res = await fetch(`https://e6b0a5bb9a47.ngrok-free.app/slack/api/decisions/delete/${decision.id}`,
+            {
+                method: "DELETE",
+                credentials: 'include', // ✅ sends cookies
+                headers: {"Content-Type": "application/json"},
+
+            });
+
+        // if (!res.ok) throw new Error("Failed to delete decision");
+
+    setShowDeleteModal(false);
+    setDecisionToDelete(null);
+    setRefreshKey((prev) => prev + 1);
+    } catch (err) {
+        setAlert({ type: "error", message: "Something went wrong. Please try again." });
+        setTimeout(() => setAlert(null), 3000);
+    }
+
+    }
 
 
     useEffect(() => {
@@ -115,7 +139,7 @@ export default function DashboardClientPage() {
     const filteredDecisions = decisions
         .filter((d:Decision) =>
             d.summary.toLowerCase().includes(search.toLowerCase()) &&
-            (filterOwner ? d.owner === filterOwner : true) &&
+            (filterOwner ? d.username === filterOwner : true) &&
             (activeTeam !== 'All' ? d.team === activeTeam : true)
         );
 
@@ -239,55 +263,52 @@ export default function DashboardClientPage() {
                         {filteredDecisions.map((d: Decision) => (
                             <div
                                 key={d.id}
-                                className="relative bg-white rounded-xl shadow-md hover:shadow-lg transition-transform hover:scale-[1.01] p-6"
+                                className="relative bg-gradient-to-br from-white via-zinc-50 to-purple-50 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 p-6 group"
                             >
-                                {/* Gradient left border */}
-                                <div className="absolute top-0 left-0 h-full w-1 bg-gradient-to-b from-blue-600 via-indigo-500 to-purple-500 rounded-l" />
+                                {/* Animated gradient border */}
+                                <div className="absolute top-0 left-0 h-full w-1 bg-gradient-to-b from-blue-600 via-indigo-500 to-purple-500 rounded-l animate-pulse" />
 
                                 {/* Title */}
-                                <h3 className="text-lg font-semibold text-zinc-800 mb-3 leading-tight tracking-tight">
+                                <h3 className="text-lg font-semibold text-zinc-800 mb-3 leading-tight tracking-tight group-hover:text-purple-700 transition-colors duration-200">
                                     {d.summary}
                                 </h3>
 
-                                {/* Team pill */}
+                                {/* Team & Status */}
                                 <div className="flex items-center justify-between mb-4">
-                                    {/* Team badge */}
-                                    <span className="inline-block px-3 py-1 text-xs font-semibold text-white bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 rounded-full shadow-sm">
-    {d.team}
-  </span>
-
-                                    {/* Status badge */}
+        <span className="inline-block px-3 py-1 text-xs font-semibold text-white bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 rounded-full shadow-md animate-fade-in">
+          {d.team}
+        </span>
                                     <span
-                                        className={`inline-block px-3 py-1 text-xs font-semibold rounded-full shadow-sm ${
-                                            d.status === 'open'
-                                                ? 'bg-green-100 text-green-700'
-                                                : d.status === 'closed'
-                                                    ? 'bg-yellow-100 text-yellow-700'
-                                                    : d.status === 'cancelled'
-                                                        ? 'bg-gray-200 text-gray-600'
-                                                        : 'bg-red-100 text-red-700'
+                                        className={`inline-block px-3 py-1 text-xs font-semibold rounded-full shadow-sm transition-colors duration-200 ${
+                                            d.status === "open"
+                                                ? "bg-green-100 text-green-700"
+                                                : d.status === "closed"
+                                                    ? "bg-yellow-100 text-yellow-700"
+                                                    : d.status === "cancelled"
+                                                        ? "bg-gray-200 text-gray-600"
+                                                        : "bg-red-100 text-red-700"
                                         }`}
                                     >
-    {d.status.toUpperCase()}
-  </span>
+          {d.status.toUpperCase()}
+        </span>
                                 </div>
 
                                 {/* Date */}
-                                <p className="text-xs text-zinc-500 mb-4">
-                                    {new Date(d.created_at).toLocaleDateString('en-US', {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric',
+                                <p className="text-xs text-zinc-500 mb-4 italic">
+                                    {new Date(d.created_at).toLocaleDateString("en-US", {
+                                        year: "numeric",
+                                        month: "long",
+                                        day: "numeric",
                                     })}
                                 </p>
 
                                 {/* Tags */}
                                 {d.tags && (
                                     <div className="flex flex-wrap gap-2 mb-4">
-                                        {d.tags.split(',').map((tag: string, i: number) => (
+                                        {d.tags.split(",").map((tag, i) => (
                                             <span
                                                 key={i}
-                                                className="px-2 py-1 text-xs bg-zinc-100 text-zinc-700 rounded-full"
+                                                className="px-2 py-1 text-xs bg-zinc-100 text-zinc-700 rounded-full hover:bg-purple-100 transition-colors duration-200"
                                             >
               {tag.trim()}
             </span>
@@ -297,38 +318,56 @@ export default function DashboardClientPage() {
 
                                 {/* Rationale */}
                                 <p className="text-sm text-zinc-700 mb-4 leading-relaxed">
-                                    <span className="font-medium text-zinc-800">Rationale:</span> {d.rationale}
+                                    <span className="font-medium text-zinc-800">Rationale:</span>{" "}
+                                    {d.rationale}
                                 </p>
 
                                 {/* Metadata */}
                                 <div className="grid grid-cols-2 gap-2 text-sm text-zinc-600 mb-4">
-                                    <p><span className="font-medium text-zinc-800">Confidence:</span> {d.confidence}</p>
-                                    <p><span className="font-medium text-zinc-800">Owner:</span> {d.owner}</p>
+                                    <p>
+                                        <span className="font-medium text-zinc-800">Confidence:</span>{" "}
+                                        {d.confidence}
+                                    </p>
+                                    <p>
+                                        <span className="font-medium text-zinc-800">Owner:</span> {d.username}
+                                    </p>
                                 </div>
 
+                                {/* Footer Actions */}
                                 <div className="flex items-center justify-between">
-                                    {/* Jira Link */}
                                     <a
                                         href={d.jiraUrl}
                                         target="_blank"
-                                        className="inline-block text-sm font-medium text-blue-600 hover:text-indigo-600 transition-colors"
+                                        className="inline-block text-sm font-medium text-blue-600 hover:text-indigo-600 transition-colors duration-200"
                                     >
                                         🔗 View Jira Issue
                                     </a>
 
-                                    {/* Conditional Action Icon */}
-                                    {d.status === 'open' ? (
+                                    {d.status === "open" ? (
                                         <>
-                                            <button onClick={() => handleEditClick(d)} title="Edit">✏️</button>
-                                            {selectedDecision && <EditDecisionModal
-                                                isOpen={isModalOpen}
-                                                onClose={() => setIsModalOpen(false)}
-                                                decision={selectedDecision}
-                                                onSave={handleSave}/> }</>
-                                    ) : d.status === 'closed' || d.status === 'cancelled' ? (
+                                            <button
+                                                onClick={() => handleEditClick(d)}
+                                                title="Edit"
+                                                className="text-purple-600 hover:text-purple-800 transition-colors duration-200"
+                                            >
+                                                ✏️
+                                            </button>
+                                            {selectedDecision && (
+                                                <EditDecisionModal
+                                                    isOpen={isModalOpen}
+                                                    onClose={() => setIsModalOpen(false)}
+                                                    decision={selectedDecision}
+                                                    onSave={handleSave}
+                                                />
+                                            )}
+                                        </>
+                                    ) : d.status === "closed" || d.status === "cancelled" ? (
                                         <button
-                                            onClick={() => console.log(d.id)}
-                                            className="text-gray-500 hover:text-red-600 transition-colors"
+                                            onClick={() => {
+                                                setDecisionToDelete(d);
+                                                setShowDeleteModal(true);
+                                            }}
+                                            className="text-gray-500 hover:text-red-600 transition-colors duration-200"
                                             title="Delete"
                                         >
                                             🗑️
@@ -338,6 +377,35 @@ export default function DashboardClientPage() {
                             </div>
                         ))}
                     </div>
+
+
+                    {showDeleteModal && decisionToDelete && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm">
+                            <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md animate-fade-in">
+                                <h2 className="text-lg font-semibold text-zinc-800 mb-4">
+                                    Are you sure you want to delete this decision?
+                                </h2>
+                                <div className="flex justify-end gap-4">
+                                    <button
+                                        onClick={() => deleteDecisionById(decisionToDelete)}
+                                        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                                    >
+                                        Yes, Delete
+                                    </button>
+
+                                    <button
+                                        onClick={() => {
+                                            setShowDeleteModal(false);
+                                            setDecisionToDelete(null);
+                                        }}
+                                        className="px-4 py-2 bg-zinc-200 text-zinc-700 rounded hover:bg-zinc-300 transition-colors"
+                                    >
+                                        No, Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Pagination */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-10 px-4 gap-6">
